@@ -92,6 +92,17 @@ def generate_state_list( chrom, start, stop, direction ):
     return state_list
 
 #================================================================================
+def print_line(line, before_state_list, state_list, after_state_list, direction):
+    "print resulting line"
+
+    # Si prev_direction est '-' on interverti before et after state list
+    if direction == '-' :
+        before_state_list, after_state_list = after_state_list, before_state_list
+
+    print( line + "\t" + before_state_list + '|' + state_list + '|' + after_state_list )
+
+
+#================================================================================
 # main
 #================================================================================
 chrom_states_file = sys.argv[1]
@@ -136,6 +147,13 @@ with open( chrom_states_file ) as f:
 
 # Previous stop position
 prev_stop = 0
+# Previous direction
+prev_direction = ''
+# Previous line
+prev_line = ''
+# Previous gene state list
+state_list = ''
+before_state_list = ''
 
 # Previous chomosom
 prev_chrom = 1
@@ -151,27 +169,55 @@ with open( data_file ) as f:
 
         # Si on est passé à un nouveau chromosome
         if chrom != prev_chrom :
-#             # Affiche la dernière ligne intergénique du chromosome précédent
-#             print( prev_chrom, "\t.      \t", prev_stop +1, "\t", a_stop[prev_chrom][-1], "\t+")
-            prev_chrom = chrom
+            # Calcul de after_state_list à la fin du chromosome précédent
+            inter_gene_start = prev_stop + 1
+            inter_gene_stop  = inter_gene_start + NB_BASES
+            after_state_list = generate_state_list( prev_chrom, inter_gene_start, inter_gene_stop, prev_direction )
+            # Affiche la ligne précédente
+            print_line(prev_line, before_state_list, state_list, after_state_list, prev_direction)
+
             # Réinit de prev_stop pour le prochain chromosome
+            prev_chrom = chrom
             prev_stop = 0
+            prev_line = ''
+
+        # Si on a déjà lu au moins une ligne, on calcule le after_state_list et on affiche la ligne précédente
+        if prev_line != '' :
+            # S'il y a un espace intergénique (pas de chevauchement)
+            inter_gen_length = start - prev_stop -1
+            if inter_gen_length > 0 :
+                inter_gene_start = prev_stop + 1
+                inter_gene_stop  = inter_gene_start + min(NB_BASES, inter_gen_length)
+                # Calcul de after_state_list
+                after_state_list = generate_state_list( chrom, inter_gene_start, inter_gene_stop, prev_direction )
+            else :
+                after_state_list = ''
+
+            # Affiche la ligne précédente
+            print_line(prev_line, before_state_list, state_list, after_state_list, prev_direction)
 
         # S'il y a un espace intergénique (pas de chevauchement)
-        if start > prev_stop :
-            # Affiche la ligne intergénique
-            inter_gene_start = prev_stop + 1
+        inter_gen_length = start - prev_stop -1
+        if inter_gen_length > 0 :
+            # Calcul de before_state_list
             inter_gene_stop   = start - 1
-            state_list = generate_state_list( chrom, inter_gene_start, inter_gene_stop, direction )
-#             print( chrom, "\t.       \t", inter_gene_start, "\t", inter_gene_stop, "\t+\t", state_list )
+            inter_gene_start = inter_gene_stop - min(NB_BASES, inter_gen_length)
+            before_state_list = generate_state_list( chrom, inter_gene_start, inter_gene_stop, direction )
+        else :
+            before_state_list = ''
 
-        # Affiche la ligne avec la liste des états en dernière colonne
+        # Calcule la liste des états du gène
         state_list = generate_state_list( chrom, start, stop, direction )
-        print( line.rstrip(), "\t", state_list )
+        prev_line = line.rstrip()
 
         prev_stop = stop
+        prev_direction = direction
 
-
-# Affiche la dernière ligne intergénique du dernier chromosome
-# print( prev_chrom, "\t.      \t", prev_stop +1, "\t", a_stop[prev_chrom][-1], "\t+")
+# Affiche la dernière ligne
+# Calcul de after_state_list à la fin du chromosome précédent
+inter_gene_start = prev_stop + 1
+inter_gene_stop  = inter_gene_start + NB_BASES
+after_state_list = generate_state_list( prev_chrom, inter_gene_start, inter_gene_stop, prev_direction )
+# Affiche la ligne précédente
+print_line(prev_line, before_state_list, state_list, after_state_list, prev_direction)
 
