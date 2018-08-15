@@ -71,7 +71,7 @@ Les deux autres aux espaces intergéniques limités à NB_BASES.
     sys.exit(1)
 
 #================================================================================
-def generate_state_list( chrom, start, end, direction ):
+def generate_state_list( chrom, start, stop, direction ):
     "génère la liste des états pour l'intervalle"
 
     # Recherche l'état corespondant à la position de départ du gene courant
@@ -80,7 +80,7 @@ def generate_state_list( chrom, start, end, direction ):
 
     # Recherche les états suivants dans l'intervalle
     for j in range(i +1, len(a_start[chrom])) :
-        if a_start[chrom][j] > end :
+        if a_start[chrom][j] > stop :
             break
         # state est une chaîne de caractère !
         state_list = state_list + a_state[chrom][j]
@@ -101,19 +101,19 @@ data_file = sys.argv[2]
 # Chaque éléments des tableaux sera une liste de position ou d'état pour le chromosome concerné
 # L'indice zéro sera initialisé à None car non utilisé
 a_start = []
-a_end = []
+a_stop = []
 a_state = []
 
 # Initialise les 3 tableaux
 for i in range(0, CHROMOSOME_COUNT +1) :
     a_start.append(i)
     a_start[i] = [] if i > 0 else None
-    a_end.append(i)
-    a_end[i] = [] if i > 0 else None
+    a_stop.append(i)
+    a_stop[i] = [] if i > 0 else None
     a_state.append(i)
     a_state[i] = [] if i > 0 else None
 
-# Lit le fichier des états et initialise les tableaux a_start, a_end et a_state
+# Lit le fichier des états et initialise les tableaux a_start, a_stop et a_state
 with open( chrom_states_file ) as f:
     line_nb = 0
     for line in f :
@@ -121,21 +121,21 @@ with open( chrom_states_file ) as f:
         # saute la 1ère ligne (en-tête)
         if line_nb == 1 :
             continue
-        (chrom, start, end, state) = line.split()
+        (chrom, start, stop, state) = line.split()
         chrom = int(chrom)
         a_start[chrom].append( int(start) )
-        a_end[chrom].append( int(end) )
+        a_stop[chrom].append( int(stop) )
         a_state[chrom].append( state )
 
 # DEBUG: affiche les tableaux
 # for chrom in range(1, CHROMOSOME_COUNT+1) :
-#     print( chrom, a_end[chrom][-1] )
+#     print( chrom, a_stop[chrom][-1] )
 #     for i in range(0, len(a_start[chrom])) :
-#         print( chrom, a_start[chrom][i], a_end[chrom][i], a_state[chrom][i] )
+#         print( chrom, a_start[chrom][i], a_stop[chrom][i], a_state[chrom][i] )
 
 
-# Previous end position
-prev_end = 0
+# Previous stop position
+prev_stop = 0
 
 # Previous chomosom
 prev_chrom = 1
@@ -146,32 +146,32 @@ with open( data_file ) as f:
         fields = line.split()
         chrom     = int(fields[0])
         start     = int(fields[2])
-        end       = int(fields[3])
+        stop      = int(fields[3])
         direction = fields[4]
 
         # Si on est passé à un nouveau chromosome
         if chrom != prev_chrom :
 #             # Affiche la dernière ligne intergénique du chromosome précédent
-#             print( prev_chrom, "\t.      \t", prev_end +1, "\t", a_end[prev_chrom][-1], "\t+")
+#             print( prev_chrom, "\t.      \t", prev_stop +1, "\t", a_stop[prev_chrom][-1], "\t+")
             prev_chrom = chrom
-            # Réinit de prev_end pour le prochain chromosome
-            prev_end = 0
+            # Réinit de prev_stop pour le prochain chromosome
+            prev_stop = 0
 
         # S'il y a un espace intergénique (pas de chevauchement)
-        if start > prev_end :
+        if start > prev_stop :
             # Affiche la ligne intergénique
-            inter_gene_start = prev_end + 1
-            inter_gene_end   = start - 1
-            state_list = generate_state_list( chrom, inter_gene_start, inter_gene_end, direction )
-#             print( chrom, "\t.       \t", inter_gene_start, "\t", inter_gene_end, "\t+\t", state_list )
+            inter_gene_start = prev_stop + 1
+            inter_gene_stop   = start - 1
+            state_list = generate_state_list( chrom, inter_gene_start, inter_gene_stop, direction )
+#             print( chrom, "\t.       \t", inter_gene_start, "\t", inter_gene_stop, "\t+\t", state_list )
 
         # Affiche la ligne avec la liste des états en dernière colonne
-        state_list = generate_state_list( chrom, start, end, direction )
+        state_list = generate_state_list( chrom, start, stop, direction )
         print( line.rstrip(), "\t", state_list )
 
-        prev_end = end
+        prev_stop = stop
 
 
 # Affiche la dernière ligne intergénique du dernier chromosome
-# print( prev_chrom, "\t.      \t", prev_end +1, "\t", a_end[prev_chrom][-1], "\t+")
+# print( prev_chrom, "\t.      \t", prev_stop +1, "\t", a_stop[prev_chrom][-1], "\t+")
 
