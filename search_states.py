@@ -21,7 +21,9 @@
 # SOFTWARE.
 
 
+VERSION = '1.1'
 CHROMOSOME_COUNT = 5
+NB_BASES = 1000
 
 import sys
 from bisect import bisect
@@ -55,20 +57,43 @@ exemple:
 
 OUTPUT:
 
-Le contenu du fichier data_file avec 1 colonne supplémentaire contenant la liste des états
+Le contenu du fichier data_file avec 1 colonne supplémentaire contenant la liste des états.
+Cette colonne supplémentaire est composée de 3 parties séparés par des "|" contenant les enchaînement d'états .
+La partie centrale correspond au corps du gènes.
+Les deux autres aux espaces intergéniques limités à NB_BASES.
 
-1       AT1G01010       3631    5899    +        26
-1       AT1G01020       6788    9130    -        42137
-1       AT1G03987       11101   11372   +        5
-1       AT1G01030       11649   13714   -        25
-1       AT1G01040       23121   31227   +        137
-1       AT1G03993       23312   24099   -        31
+1       AT1G01010       3631    5899    +        9|26|7
+1       AT1G01020       6788    9130    -        31|42137|78
 ...
 
 """
 )
     sys.exit(1)
 
+#================================================================================
+def generate_state_list( chrom, start, end, direction ):
+    "génère la liste des états pour l'intervalle"
+
+    # Recherche l'état corespondant à la position de départ du gene courant
+    i = bisect(a_start[chrom], start) -1
+    state_list = a_state[chrom][i]
+
+    # Recherche les états suivants dans l'intervalle
+    for j in range(i +1, len(a_start[chrom])) :
+        if a_start[chrom][j] > end :
+            break
+        # state est une chaîne de caractère !
+        state_list = state_list + a_state[chrom][j]
+
+    # Si la direction du gène est négative, il faut inverser la liste des états
+    if direction == "-":
+        state_list = state_list[::-1]
+
+    return state_list
+
+#================================================================================
+# main
+#================================================================================
 chrom_states_file = sys.argv[1]
 data_file = sys.argv[2]
 
@@ -107,26 +132,6 @@ with open( chrom_states_file ) as f:
 #     print( chrom, a_end[chrom][-1] )
 #     for i in range(0, len(a_start[chrom])) :
 #         print( chrom, a_start[chrom][i], a_end[chrom][i], a_state[chrom][i] )
-
-def generate_state_list( chrom, start, end, direction ):
-    "génère la liste des états pour l'intervalle"
-
-    # Recherche l'état corespondant à la position de départ du gene courant
-    i = bisect(a_start[chrom], start) -1
-    state_list = a_state[chrom][i]
-
-    # Recherche les états suivants dans l'intervalle
-    for j in range(i +1, len(a_start[chrom])) :
-        if a_start[chrom][j] > end :
-            break
-        # state est une chaîne de caractère !
-        state_list = state_list + a_state[chrom][j]
-
-    # Si la direction du gène est négative, il faut inverser la liste des états
-    if direction == "-":
-        state_list = state_list[::-1]
-
-    return state_list
 
 
 # Previous end position
