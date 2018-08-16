@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-VERSION = '1.1'
+VERSION = '1.2'
 CHROMOSOME_COUNT = 5
 NB_BASES = 1000
 
@@ -44,7 +44,8 @@ Chrom	From	To	State
 1	4651	6450	6
 ...
 
-data_file doit avoir 5 colonnes séparées par des tabulations.
+data_file doit avoir 5 colonnes séparées par des tabulations et doit être trié par chromosome
+et commencer par le chromosome 1
 exemple:
 
 1       AT1G01010       3631    5899    +
@@ -57,39 +58,60 @@ exemple:
 
 OUTPUT:
 
-Le contenu du fichier data_file avec 1 colonne supplémentaire contenant la liste des états.
-Cette colonne supplémentaire est composée de 3 parties séparés par des "|" contenant les enchaînement d'états .
+Le contenu du fichier data_file avec 2 colonnes supplémentaires contenant:
+- la liste des états.
+Cette 1ère colonne supplémentaire est composée de 3 parties séparés par des "|" contenant les enchaînement d'états .
 La partie centrale correspond au corps du gènes.
 Les deux autres aux espaces intergéniques limités à NB_BASES.
+- la longueur de chaque état
+Les longueurs sont séparées par des virgules 
 
-1       AT1G01010       3631    5899    +        9|26|7
-1       AT1G01020       6788    9130    -        31|42137|78
+1       AT1G01010       3631    5899    +        9|26|7       10|50,10|123
+1       AT1G01020       6788    9130    -        31|42137|78  6,25|12,456,10,23,58|45,47
 ...
 
 """
 )
     sys.exit(1)
 
+
+#================================================================================
+def get_state_len(state_ndx, chrom, range_start, range_stop):
+    "retourne la longueur de l'état d'index state_ndx en fonction du start, stop de l'intervalle considéré"
+
+    state_start = max(a_start[chrom][state_ndx], range_start)
+    state_stop  = min(a_stop[chrom][state_ndx], range_stop)
+    return str(state_stop - state_start + 1)
+
+
 #================================================================================
 def generate_state_list( chrom, start, stop, direction ):
-    "génère la liste des états pour l'intervalle"
+    "génère la liste des états pour l'intervalle et leur longueurs"
 
     # Recherche l'état corespondant à la position de départ du gene courant
     i = bisect(a_start[chrom], start) -1
+    # S'il n'y a pas d'état dans le range (start, stop) considéré, on retourne un tuble de liste vide
+    if a_stop[chrom][i] <= start:
+        return ( '', '' )
+
     state_list = a_state[chrom][i]
+    len_list = []
+    len_list.append( get_state_len(i, chrom, start, stop) )
 
     # Recherche les états suivants dans l'intervalle
     for j in range(i +1, len(a_start[chrom])) :
         if a_start[chrom][j] > stop :
             break
         # state est une chaîne de caractère !
-        state_list = state_list + a_state[chrom][j]
+        state_list += a_state[chrom][j]
+        len_list.append( get_state_len(j, chrom, start, stop) )
 
-    # Si la direction du gène est négative, il faut inverser la liste des états
+    # Si la direction du gène est négative, il faut inverser les listes des états et de longueurs
     if direction == "-":
         state_list = state_list[::-1]
+        len_list = len_list[::-1]
 
-    return state_list
+    return (state_list, ','.join(len_list))
 
 #================================================================================
 def print_line(line, before_state_list, state_list, after_state_list, direction):
@@ -99,7 +121,8 @@ def print_line(line, before_state_list, state_list, after_state_list, direction)
     if direction == '-' :
         before_state_list, after_state_list = after_state_list, before_state_list
 
-    print( line + "\t" + before_state_list + '|' + state_list + '|' + after_state_list )
+    print( line + "\t" + before_state_list[0] + '|' + state_list[0] + '|' + after_state_list[0] +
+                  "\t" + before_state_list[1] + '|' + state_list[1] + '|' + after_state_list[1] )
 
 
 #================================================================================
@@ -191,7 +214,7 @@ with open( data_file ) as f:
                 # Calcul de after_state_list
                 after_state_list = generate_state_list( chrom, inter_gene_start, inter_gene_stop, prev_direction )
             else :
-                after_state_list = ''
+                after_state_list = ('' , '')
 
             # Affiche la ligne précédente
             print_line(prev_line, before_state_list, state_list, after_state_list, prev_direction)
@@ -202,9 +225,11 @@ with open( data_file ) as f:
             # Calcul de before_state_list
             inter_gene_stop   = start - 1
             inter_gene_start = inter_gene_stop - min(NB_BASES, inter_gen_length)
+            if inter_gene_start <= 0:
+                inter_gene_start = 1
             before_state_list = generate_state_list( chrom, inter_gene_start, inter_gene_stop, direction )
         else :
-            before_state_list = ''
+            before_state_list = ('', '')
 
         # Calcule la liste des états du gène
         state_list = generate_state_list( chrom, start, stop, direction )
