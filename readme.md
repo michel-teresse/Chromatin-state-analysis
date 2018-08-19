@@ -121,6 +121,3 @@ Result will look like :
     state 7 : 11915907
     state 8 : 2621600
     state 9 : 8778898
-
-## About Chromatin state analysis
-These tools have been developped at [LGBP - BIAM](http://biam.cea.fr/drf/biam/Pages/laboratoires/lgbp.aspx) by M. Terese and C. Lecampion.
