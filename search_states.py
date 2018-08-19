@@ -90,8 +90,8 @@ def generate_state_list( chrom, start, stop, direction ):
 
     # Recherche l'état corespondant à la position de départ du gene courant
     i = bisect(a_start[chrom], start) -1
-    # S'il n'y a pas d'état dans le range (start, stop) considéré, on retourne un tuble de liste vide
-    if a_stop[chrom][i] <= start:
+    # S'il n'y a pas d'état dans le range (start, stop) considéré, on retourne un tuple de listes vides
+    if a_stop[chrom][i] < start:
         return ( '', '' )
 
     state_list = a_state[chrom][i]
