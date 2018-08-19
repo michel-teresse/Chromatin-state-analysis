@@ -124,3 +124,4 @@ Result will look like :
 
 ## About Chromatin state analysis
 These tools have been developped at [LGBP - BIAM](http://biam.cea.fr/drf/biam/Pages/laboratoires/lgbp.aspx) by M. Terese and C. Lecampion.
+
