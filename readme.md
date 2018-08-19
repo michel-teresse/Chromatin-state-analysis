@@ -112,8 +112,8 @@ or
     
 Result will look like :
 
-    state 1 : 12679709  
-    state 2 : 7391911  
+    state 1 : 12679709
+    state 2 : 7391911
     state 3 : 12111790
     state 4 : 4055970
     state 5 : 9201393
