@@ -1,14 +1,36 @@
 #!/bin/bash
-# Affiche le nombre de bases du corps du gène couvert par chaque état
-# à partir d'un fichier qui contient les états et les longueurs correspondante au format suivant:
+# This script, "state_coverage.sh" computes the number of bases covered by each state of the gene body in a search_state.py output file.
+#
+# Copyright (c) 2017 Michel TERESE
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# For the gene body, return the number of bases covered by each state
+# from a file containing the states and their lengths in the following format:
 #
 # 5 AT5G67330 26861266  26863897  + 3|3132|2  145|134,1649,449,396|496
 #
-# Le fichier ne doit pas contenir d'entête
-# Les colonnes correspondent à:
-# chromosome gene start stop sens état_chromatinien longueurs
+# The file has no header
+# Columns are:
+# chromosome gene start end direction chrom_state lengths
 #
-# espace intergénique avant|corps du gène|espace intergénique après
+# intergenic space before|gene body|intergenic space after
 
 [[ $# -eq 1 && "$1" == '-h' ]] && printf "syntax:\n\t$0 search_state.py_output_file\nor\n\tsearch_state.py | $0\n" && exit 1
 
